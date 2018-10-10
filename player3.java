@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Comparator;
+import java.util.ArrayList;
 
 public class player3 implements ContestSubmission
 {
@@ -52,25 +53,32 @@ public class player3 implements ContestSubmission
         int evals = 0;
 
         int dim_size = 10;
+        int i, j;
         double min_boundary = -5.0;
         double max_boundary = 5.0;
 
         int population_size = 100;
-        int number_of_parents = 50;
+        int number_of_parents = 20;
+        int tournament_size = 10;
+        double tournament_start_p = 0.5;
+        double tau = 0.31;
 
-
+        // Init population
         Child[] population = new Child[population_size];
-        for (int i = 0; i < population_size; i++) {
+        for (i = 0; i < population_size; i++) {
             Child new_child = new Child();
 
-            double[] fenotype_values = new double[dim_size];
-            for (int j = 0; j < dim_size; j++) {
-                fenotype_values[j] = min_boundary + (max_boundary - min_boundary) * rnd_.nextDouble();
+            double[] phenotype_values = new double[dim_size];
+            double[] sigma_values = new double[dim_size];
+            for (j = 0; j < dim_size; j++) {
+                phenotype_values[j] = min_boundary + (max_boundary - min_boundary) * rnd_.nextDouble();
+                sigma_values[j] = rnd_.nextGaussian();
             }
 
-            new_child.fenotype_value = fenotype_values;
+            new_child.phenotype_value = phenotype_values;
+            new_child.sigma_value = sigma_values;
             try {
-                new_child.fitness = (double) evaluation_.evaluate(fenotype_values);
+                new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
             } catch (NullPointerException e){
                 return;
             }
@@ -78,71 +86,161 @@ public class player3 implements ContestSubmission
             population[i] = new_child;
         }
 
-//        for (int i=0;i<population_size;i++){
-//            System.out.println(String.valueOf(i).concat(": ").concat(String.valueOf(population[i].fitness)));
-//        }
-
+        // Sort population based on fitness
         Arrays.sort(population, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
-
-//        for (int i=0;i<population_size;i++){
-//            System.out.println(String.valueOf(i).concat(": ").concat(String.valueOf(population[i].fitness)));
-//        }
-
 
         while (evals < evaluations_limit_) {
             // Select parents
-            Child[] top_parents = new Child[number_of_parents];
-            for (int i = 0; i < number_of_parents; i++) {
-                top_parents[i] = population[i];
-            }
-            Child[] new_children = new Child[number_of_parents];
-            // Apply crossover / mutation operators
+            Child[] parents = new Child[number_of_parents];
+            ArrayList<Child> next_generation = new ArrayList<Child>();
+            next_generation.addAll(Arrays.asList(population));
 
-            for (int i = 0; i < number_of_parents; i++) {
+            // Tournament selection
+            Child[] tournament;
+            i = 0;
+            int random_pick;
+            double tournament_p;
+            while(i < number_of_parents) {
+                tournament = new Child[tournament_size];
+                for (j = 0; j < tournament_size; j++) {
+                    random_pick = rnd_.nextInt(next_generation.size() - 1);
+                    tournament[j] = next_generation.get(random_pick);
+                    next_generation.remove(random_pick);
+                }
+                Arrays.sort(tournament, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
+                tournament_p = tournament_start_p;
+                for (j = 0; j < tournament_size; j++) {
+                    tournament_p = tournament_p * Math.pow(1 - tournament_p, j);
+                    if (rnd_.nextDouble() < tournament_p) {
+                        parents[i] = tournament[j];
+                        i++;
+                        break;
+                    }
+                }
+                for (int k = 0; k < tournament_size; k++) {
+                    if (k != j) {
+                        next_generation.add(tournament[k]);
+                    }
+                }
+            }
+
+            // Roulette wheel selection
+//            ArrayList<Child> old_population = new ArrayList<Child>();
+//            old_population.addAll(Arrays.asList(population));
+//            double sum_of_fitness, limit;
+//            for (int i = 0; i < number_of_parents; i++) {
+//                sum_of_fitness = 0.0;
+//                for(int j = 0; j < old_population.size(); j++){
+//                    sum_of_fitness += old_population.get(j).fitness;
+//                }
+//                limit = rnd_.nextDouble() * sum_of_fitness;
+//                for(int j = 0; j < old_population.size(); j++){
+//                    limit -= old_population.get(j).fitness;
+//                    if(limit < 0.0){
+//                        parents[i] = old_population.get(j);
+//                        old_population.remove(j);
+//                        break;
+//                    }
+//                }
+//            }
+
+            // Random parent selection
+//            int random_pick;
+//            for(int i = 0; i < number_of_parents; i++) {
+//                random_pick = rnd_.nextInt(next_generation.size());
+//                parents[i] = next_generation.get(random_pick);
+//                next_generation.remove(random_pick);
+//            }
+
+
+            int number_of_children = number_of_parents * 2;
+            Child[] new_children = new Child[number_of_children];
+
+            // Mutation/Crossover
+            for (i = 0; i < number_of_parents; i++) {
+                // Crossover: One-point crossover
                 int mating_partner = rnd_.nextInt(number_of_parents);
                 int crossover_point = rnd_.nextInt(dim_size);
 
                 Child new_child = new Child();
-//                System.out.println("CROSSOVERPOINT: ".concat(String.valueOf(crossover_point)));
-//                System.out.println("MATINGPARTNER: ".concat(String.valueOf(mating_partner)));
-
-                double[] fenotype_values = new double[dim_size];
-                for (int j = 0; j < crossover_point; j++) {
-//                    System.out.println("I: ".concat(String.valueOf(j)));
-                    fenotype_values[j] = top_parents[i].fenotype_value[j];
+                double[] phenotype_values = new double[dim_size];
+                double[] sigma_values = new double[dim_size];
+                for (j = 0; j < crossover_point; j++) {
+                    phenotype_values[j] = parents[i].phenotype_value[j];
+                    sigma_values[j] = parents[i].sigma_value[j];
                 }
-                for (int j = crossover_point; j < dim_size; j++) {
-//                    System.out.println("J: ".concat(String.valueOf(j)));
-                    fenotype_values[j] = top_parents[mating_partner].fenotype_value[j];
+                for (j = crossover_point; j < dim_size; j++) {
+                    phenotype_values[j] = parents[mating_partner].phenotype_value[j];
+                    sigma_values[j] = parents[mating_partner].sigma_value[j];
                 }
 
-                new_child.fenotype_value = fenotype_values;
+                new_child.phenotype_value = phenotype_values;
+                new_child.sigma_value = sigma_values;
                 try {
-                    new_child.fitness = (double) evaluation_.evaluate(fenotype_values);
+                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
                 } catch (NullPointerException e){
                     return;
                 }
                 new_children[i] = new_child;
+
+                // Mutation: Simple gaussian mutation
+                new_child = new Child();
+                phenotype_values = new double[dim_size];
+                sigma_values = new double[dim_size];
+                for(j=0;j<dim_size;j++){
+                    sigma_values[j] = parents[i].sigma_value[j] * Math.exp(tau * rnd_.nextGaussian());
+                    phenotype_values[j] = parents[i].phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
+                }
+                new_child.phenotype_value = phenotype_values;
+                new_child.sigma_value = sigma_values;
+                try {
+                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
+                } catch (NullPointerException e){
+                    return;
+                }
+                new_children[i + number_of_parents] = new_child;
             }
 
-            for (int i = 0; i < number_of_parents; i++) {
-                population[population_size - i - 1] = new_children[i];
+            // Select survivors: tournament
+            ArrayList<Child> off_spring = new ArrayList<Child>();
+            off_spring.addAll(Arrays.asList(parents));
+            off_spring.addAll(Arrays.asList(new_children));
+
+            i = 0;
+//            Child[] tournament;
+//            double tournament_p;
+            while(i < number_of_parents){
+                tournament = new Child[tournament_size];
+                for(j = 0; j < tournament_size; j++){
+                    random_pick = rnd_.nextInt(off_spring.size()-1);
+                    tournament[j] = off_spring.get(random_pick);
+                    off_spring.remove(random_pick);
+                }
+                Arrays.sort(tournament, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
+                tournament_p = tournament_start_p;
+                for(j = 0; j < tournament_size; j++){
+                    tournament_p = tournament_p * Math.pow(1-tournament_p, j);
+                    if(rnd_.nextDouble() < tournament_p){
+                        next_generation.add(tournament[j]);
+                        i++;
+                        break;
+                    }
+                }
+                for(int k = 0; k < tournament_size; k++){
+                    if(k != j) {
+                        off_spring.add(tournament[k]);
+                    }
+                }
             }
 
+            population = next_generation.toArray(new Child[population_size]);
+
+            // Sort population for next evaluation
             Arrays.sort(population, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
 
-            double best_child[] = population[0].fenotype_value;
-            // Check fitness of unknown fuction
+            double best_child[] = population[0].phenotype_value;
 
             evals++;
-            System.out.println("EVALS: ".concat(String.valueOf(evals)));
-
-            for (int i=0;i<population_size;i++){
-                System.out.println(String.valueOf(i).concat(": ").concat(String.valueOf(population[i].fitness)));
-            }
-
-
-            // Select survivors
         }
     }
 }
@@ -150,6 +248,7 @@ public class player3 implements ContestSubmission
 
 class Child
 {
-    public double[] fenotype_value;
+    public double[] phenotype_value;
+    public double[] sigma_value;
     public double fitness;
 };
