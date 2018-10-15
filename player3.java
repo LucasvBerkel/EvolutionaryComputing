@@ -64,6 +64,7 @@ public class player3 implements ContestSubmission
         double tau_ap = 0.158;
         double tau = 0.397;
         double s = 2;
+        double mutation_threshold = 0.05;
 
         // Declaring some variables we might need later
         int i, j;
@@ -164,6 +165,9 @@ public class player3 implements ContestSubmission
                 double overall_learning_rate = Math.exp(tau_ap * rnd_.nextGaussian());
                 for(j=0;j<dim_size;j++){
                     sigma_values[j] = new_child.sigma_value[j] * overall_learning_rate * Math.exp(tau * rnd_.nextGaussian());
+                    if(sigma_values[j] < mutation_threshold){
+                        sigma_values[j] = mutation_threshold;
+                    }
                     phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
                 }
                 new_child.phenotype_value = phenotype_values;
