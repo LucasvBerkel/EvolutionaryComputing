@@ -60,6 +60,7 @@ public class player3 implements ContestSubmission
         int number_of_parents = 40;
         int tournament_size = 10;
         double tournament_start_p = 0.5;
+        double overall_sigma = rnd_.nextGaussian()*max_boundary;
         double tau_ap = 0.158;
         double tau = 0.397;
         double s = 2;
@@ -269,13 +270,31 @@ public class player3 implements ContestSubmission
 //                new_children[i] = new_child;
 
                 /////////////////////////////////// MUTATION ///////////////////////////////////
+
+                // Uncorrelated mutation with a single sigma
+//                new_child = new Child();
+//                phenotype_values = new double[dim_size];
+//                sigma_values = new double[dim_size];
+//                overall_sigma = overall_sigma * Math.exp(tau_ap * rnd_.nextGaussian());
+//                for(j=0;j<dim_size;j++){
+//                    phenotype_values[j] = parents[i].phenotype_value[j] + rnd_.nextGaussian() * overall_sigma;
+//                }
+//                new_child.phenotype_value = phenotype_values;
+//                new_child.sigma_value = sigma_values;
+//                try {
+//                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
+//                } catch (NullPointerException e){
+//                    return;
+//                }
+//                new_children[i + number_of_parents] = new_child;
+
                 // Uncorrelated mutation with n sigma's
                 new_child = new Child();
                 phenotype_values = new double[dim_size];
                 sigma_values = new double[dim_size];
-                double overall_learning_rate = Math.exp(tau_ap * rnd_.nextGaussian());
+                double overall_learning_rate = tau_ap * rnd_.nextGaussian();
                 for(j=0;j<dim_size;j++){
-                    sigma_values[j] = parents[i].sigma_value[j] * overall_learning_rate * Math.exp(tau * rnd_.nextGaussian());
+                    sigma_values[j] = parents[i].sigma_value[j] * Math.exp(overall_learning_rate + tau * rnd_.nextGaussian());
                     phenotype_values[j] = parents[i].phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
                 }
                 new_child.phenotype_value = phenotype_values;
