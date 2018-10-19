@@ -58,13 +58,14 @@ public class player3 implements ContestSubmission
 
         int population_size = 50;
         int number_of_parents = 40;
+        int number_of_children = 210;
         int tournament_size = 10;
         double tournament_start_p = 0.5;
         double overall_sigma = rnd_.nextGaussian()*max_boundary;
         double tau_ap = 0.158;
         double tau = 0.397;
         double s = 2;
-        double c = 3;
+        double mutation_threshold = 0.05;
 
         // Declaring some variables we might need later
         int i, j;
@@ -123,6 +124,13 @@ public class player3 implements ContestSubmission
 //            }
 
             // Ranking selection; exponential ranking
+            double su=0;
+            for ( i = 1; i<=number_of_parents; i++){
+                su = su + Math.exp(-i);
+            }
+
+            double c = 1/(number_of_parents - su);
+
             for(i =0 ; i<number_of_parents; i++){
                 int gen_size = next_generation.size();
                 double[] prob_values = new double[gen_size];
@@ -194,12 +202,10 @@ public class player3 implements ContestSubmission
 //                next_generation.remove(random_pick);
 //            }
 
-
-            int number_of_children = number_of_parents * 2;
+            /////////////////////////////////// RECOMBINATION AND MUTATION ///////////////////////////////////
             Child[] new_children = new Child[number_of_children];
 
-            /////////////////////////////////// RECOMBINATION AND MUTATION ///////////////////////////////////
-            for (i = 0; i < number_of_parents; i++) {
+            for (i = 0; i < number_of_children; i++) {
                 /////////////////////////////////// RECOMBINATION ///////////////////////////////////
                 // One-point crossover
 //                int mating_partner = rnd_.nextInt(number_of_parents);
@@ -224,21 +230,23 @@ public class player3 implements ContestSubmission
 //                } catch (NullPointerException e){
 //                    return;
 //                }
-//                new_children[i] = new_child;
+
 
                 // Uniform crossover
-                int mating_partner = rnd_.nextInt(number_of_parents);
+                int mating_partner1 = rnd_.nextInt(number_of_parents);
+                int mating_partner2 = rnd_.nextInt(number_of_parents);
+
 
                 Child new_child = new Child();
                 double[] phenotype_values = new double[dim_size];
                 double[] sigma_values = new double[dim_size];
                 for (j = 0; j < dim_size; j++){
                     if(rnd_.nextDouble() > 0.5){
-                        phenotype_values[j] = parents[i].phenotype_value[j];
-                        sigma_values[j] = parents[i].sigma_value[j];
+                        phenotype_values[j] = parents[mating_partner1].phenotype_value[j];
+                        sigma_values[j] = parents[mating_partner1].sigma_value[j];
                     } else {
-                        phenotype_values[j] = parents[mating_partner].phenotype_value[j];
-                        sigma_values[j] = parents[mating_partner].sigma_value[j];
+                        phenotype_values[j] = parents[mating_partner2].phenotype_value[j];
+                        sigma_values[j] = parents[mating_partner2].sigma_value[j];
                     }
                 }
                 new_child.phenotype_value = phenotype_values;
@@ -248,7 +256,6 @@ public class player3 implements ContestSubmission
                 } catch (NullPointerException e){
                     return;
                 }
-                new_children[i] = new_child;
 
                 // Arethmetic recombination
 //                int mating_partner = rnd_.nextInt(number_of_parents);
@@ -272,12 +279,11 @@ public class player3 implements ContestSubmission
                 /////////////////////////////////// MUTATION ///////////////////////////////////
 
                 // Uncorrelated mutation with a single sigma
-//                new_child = new Child();
 //                phenotype_values = new double[dim_size];
 //                sigma_values = new double[dim_size];
 //                overall_sigma = overall_sigma * Math.exp(tau_ap * rnd_.nextGaussian());
 //                for(j=0;j<dim_size;j++){
-//                    phenotype_values[j] = parents[i].phenotype_value[j] + rnd_.nextGaussian() * overall_sigma;
+//                    phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * overall_sigma;
 //                }
 //                new_child.phenotype_value = phenotype_values;
 //                new_child.sigma_value = sigma_values;
@@ -286,16 +292,18 @@ public class player3 implements ContestSubmission
 //                } catch (NullPointerException e){
 //                    return;
 //                }
-//                new_children[i + number_of_parents] = new_child;
+//                new_children[i] = new_child;
 
                 // Uncorrelated mutation with n sigma's
-                new_child = new Child();
                 phenotype_values = new double[dim_size];
                 sigma_values = new double[dim_size];
                 double overall_learning_rate = tau_ap * rnd_.nextGaussian();
                 for(j=0;j<dim_size;j++){
-                    sigma_values[j] = parents[i].sigma_value[j] * Math.exp(overall_learning_rate + tau * rnd_.nextGaussian());
-                    phenotype_values[j] = parents[i].phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
+                    sigma_values[j] = new_child.sigma_value[j] * Math.exp(overall_learning_rate + tau * rnd_.nextGaussian());
+                    phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
+                    if(sigma_values[j] < mutation_threshold){
+                        sigma_values[j] = mutation_threshold;
+                    }
                 }
                 new_child.phenotype_value = phenotype_values;
                 new_child.sigma_value = sigma_values;
@@ -304,7 +312,7 @@ public class player3 implements ContestSubmission
                 } catch (NullPointerException e){
                     return;
                 }
-                new_children[i + number_of_parents] = new_child;
+                new_children[i] = new_child;
             }
 
             /////////////////////////////////// SURVIVOR SELECTION ///////////////////////////////////
@@ -312,7 +320,6 @@ public class player3 implements ContestSubmission
             ArrayList<Child> off_spring = new ArrayList<Child>();
             off_spring.addAll(Arrays.asList(parents));
             off_spring.addAll(Arrays.asList(new_children));
-
             i = 0;
             while(i < number_of_parents){
                 tournament = new Child[tournament_size];
