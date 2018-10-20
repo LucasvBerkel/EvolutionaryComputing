@@ -129,11 +129,10 @@ public class player3 implements ContestSubmission
                 next_generation.remove(j);
             }
 
-
             /////////////////////////////////// RECOMBINATION AND MUTATION ///////////////////////////////////
             Child[] new_children = new Child[number_of_children];
-
             for (i = 0; i < number_of_children; i++) {
+
                 /////////////////////////////////// RECOMBINATION ///////////////////////////////////
                 // Uniform crossover
                 int mating_partner1 = rnd_.nextInt(number_of_parents);
@@ -153,21 +152,48 @@ public class player3 implements ContestSubmission
                 }
                 new_child.phenotype_value = phenotype_values;
                 new_child.sigma_value = sigma_values;
-                try {
-                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
-                } catch (NullPointerException e){
-                    return;
-                }
+
                 /////////////////////////////////// MUTATION ///////////////////////////////////
                 // Uncorrelated mutation with n sigma's
                 phenotype_values = new double[dim_size];
                 sigma_values = new double[dim_size];
                 double overall_learning_rate = Math.exp(tau_ap * rnd_.nextGaussian());
-                for(j=0;j<dim_size;j++){
-                    sigma_values[j] = new_child.sigma_value[j] * overall_learning_rate * Math.exp(tau * rnd_.nextGaussian());
-                    if(sigma_values[j] < mutation_threshold){
-                        sigma_values[j] = mutation_threshold;
-                    }
+                double nextt = 0;
+                double y1 = 0;
+                double sigma1 = 0;
+
+                for (j = 0; j < dim_size; j++) {
+
+
+                        //1-st option to update sigma
+
+                    do {
+                        sigma_values[j] = new_child.sigma_value[j] * overall_learning_rate * Math.exp(tau * rnd_.nextGaussian());
+                    }while(sigma_values[j] > 3/2);
+
+                        //2-nd option to update sigma
+                        //sigma_values[j] = 1 - 0.999*evals/T;
+
+
+                        //Normal
+                    /*
+                    do {
+                        phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
+                    }while(phenotype_values[j] > 15 || phenotype_values[j]<-15);
+                    */
+
+                        //Cauchy
+                    /*
+                    do {
+                        phenotype_values[j] = new_child.phenotype_value[j] + sigma_values[j]*Math.tan((rnd_.nextDouble()-0.5) * Math.PI);
+                    }while(phenotype_values[j] > 15 || phenotype_values[j]<-15);
+                    */
+
+                        //Student with 2 degrees of freedom
+                    do {
+                        phenotype_values[j] = new_child.phenotype_value[j] + sigma_values[j]*(rnd_.nextDouble() - 0.5)*Math.sqrt(2/(rnd_.nextDouble()*(1-rnd_.nextDouble())));
+                    }while(phenotype_values[j] > 15 || phenotype_values[j]<-15);
+
                     phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
                 }
                 new_child.phenotype_value = phenotype_values;
