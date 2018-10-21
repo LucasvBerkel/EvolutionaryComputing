@@ -232,11 +232,6 @@ public class player3 implements ContestSubmission
 
                 new_child.phenotype_value = phenotype_values;
                 new_child.sigma_value = sigma_values;
-                try {
-                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
-                } catch (NullPointerException e){
-                    return;
-                }
 
 
                 // Uniform crossover
@@ -258,11 +253,6 @@ public class player3 implements ContestSubmission
 //                }
 //                new_child.phenotype_value = phenotype_values;
 //                new_child.sigma_value = sigma_values;
-//                try {
-//                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
-//                } catch (NullPointerException e){
-//                    return;
-//                }
 
                 // Arethmetic recombination
 //                int mating_partner1 = rnd_.nextInt(number_of_parents);
@@ -278,12 +268,7 @@ public class player3 implements ContestSubmission
 //                }
 //                new_child.phenotype_value = phenotype_values;
 //                new_child.sigma_value = sigma_values;
-//                try {
-//                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
-//                } catch (NullPointerException e){
-//                    return;
-//                }
-//                new_children[i] = new_child;
+
 
                 /////////////////////////////////// MUTATION ///////////////////////////////////
 
@@ -302,6 +287,7 @@ public class player3 implements ContestSubmission
                 try {
                     new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
                 } catch (NullPointerException e){
+                        System.out.println("GEN: ".concat(String.valueOf(next_generation.get(0).fitness)));
                     return;
                 }
                 new_children[i] = new_child;
@@ -322,6 +308,7 @@ public class player3 implements ContestSubmission
 //                try {
 //                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
 //                } catch (NullPointerException e){
+//                    System.out.println("GEN: ".concat(String.valueOf(next_generation.get(0).fitness)));
 //                    return;
 //                }
 //                new_children[i] = new_child;
