@@ -28,5 +28,5 @@ eval_simple:
 eval_all: eval_simple
 	for number in 1 2 3 4 5 6 7 8 9 10; do java -jar testrun.jar -submission=player3 -evaluation=KatsuuraEvaluation -seed=$$number ; done
 
-eval_sphere:
+eval_sphere: compile
 	for number in 1 2 3 4 5 6 7 8 9 10; do java -jar testrun.jar -submission=player3 -evaluation=SphereEvaluation -seed=$$number ; done

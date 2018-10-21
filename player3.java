@@ -181,32 +181,25 @@ public class player3 implements ContestSubmission
 //            }
 
             // Roulette wheel selection
-//            ArrayList<Child> old_population = new ArrayList<Child>();
-//            old_population.addAll(Arrays.asList(population));
 //            double sum_of_fitness, limit;
-//            for (int i = 0; i < number_of_parents; i++) {
+//            i = 0;
+//            while (i < number_of_parents) {
 //                sum_of_fitness = 0.0;
-//                for(int j = 0; j < old_population.size(); j++){
-//                    sum_of_fitness += old_population.get(j).fitness;
+//                for(j = 0; j < next_generation.size(); j++){
+//                    sum_of_fitness += next_generation.get(j).fitness;
 //                }
 //                limit = rnd_.nextDouble() * sum_of_fitness;
-//                for(int j = 0; j < old_population.size(); j++){
-//                    limit -= old_population.get(j).fitness;
+//                for(j = 0; j < next_generation.size(); j++){
+//                    limit -= next_generation.get(j).fitness;
 //                    if(limit < 0.0){
-//                        parents[i] = old_population.get(j);
-//                        old_population.remove(j);
+//                        parents[i] = next_generation.get(j);
+//                        next_generation.remove(j);
+//                        i++;
 //                        break;
 //                    }
 //                }
 //            }
 
-            // Random parent selection
-//            int random_pick;
-//            for(int i = 0; i < number_of_parents; i++) {
-//                random_pick = rnd_.nextInt(next_generation.size());
-//                parents[i] = next_generation.get(random_pick);
-//                next_generation.remove(random_pick);
-//            }
 
             /////////////////////////////////// RECOMBINATION AND MUTATION ///////////////////////////////////
             Child[] new_children = new Child[number_of_children];
@@ -214,45 +207,45 @@ public class player3 implements ContestSubmission
             for (i = 0; i < number_of_children; i++) {
                 /////////////////////////////////// RECOMBINATION ///////////////////////////////////
                 // One-point crossover
-                int mating_partner1 = rnd_.nextInt(number_of_parents);
-                int mating_partner2 = rnd_.nextInt(number_of_parents);
-                int crossover_point = rnd_.nextInt(dim_size);
-
-                Child new_child = new Child();
-                double[] phenotype_values = new double[dim_size];
-                double[] sigma_values = new double[dim_size];
-                for (j = 0; j < crossover_point; j++) {
-                    phenotype_values[j] = parents[mating_partner1].phenotype_value[j];
-                    sigma_values[j] = parents[mating_partner1].sigma_value[j];
-                }
-                for (j = crossover_point; j < dim_size; j++) {
-                    phenotype_values[j] = parents[mating_partner2].phenotype_value[j];
-                    sigma_values[j] = parents[mating_partner2].sigma_value[j];
-                }
-
-                new_child.phenotype_value = phenotype_values;
-                new_child.sigma_value = sigma_values;
-
-
-                // Uniform crossover
 //                int mating_partner1 = rnd_.nextInt(number_of_parents);
 //                int mating_partner2 = rnd_.nextInt(number_of_parents);
-
+//                int crossover_point = rnd_.nextInt(dim_size);
 //
 //                Child new_child = new Child();
 //                double[] phenotype_values = new double[dim_size];
 //                double[] sigma_values = new double[dim_size];
-//                for (j = 0; j < dim_size; j++){
-//                    if(rnd_.nextDouble() > 0.5){
-//                        phenotype_values[j] = parents[mating_partner1].phenotype_value[j];
-//                        sigma_values[j] = parents[mating_partner1].sigma_value[j];
-//                    } else {
-//                        phenotype_values[j] = parents[mating_partner2].phenotype_value[j];
-//                        sigma_values[j] = parents[mating_partner2].sigma_value[j];
-//                    }
+//                for (j = 0; j < crossover_point; j++) {
+//                    phenotype_values[j] = parents[mating_partner1].phenotype_value[j];
+//                    sigma_values[j] = parents[mating_partner1].sigma_value[j];
 //                }
+//                for (j = crossover_point; j < dim_size; j++) {
+//                    phenotype_values[j] = parents[mating_partner2].phenotype_value[j];
+//                    sigma_values[j] = parents[mating_partner2].sigma_value[j];
+//                }
+//
 //                new_child.phenotype_value = phenotype_values;
 //                new_child.sigma_value = sigma_values;
+
+
+                // Uniform crossover
+                int mating_partner1 = rnd_.nextInt(number_of_parents);
+                int mating_partner2 = rnd_.nextInt(number_of_parents);
+
+
+                Child new_child = new Child();
+                double[] phenotype_values = new double[dim_size];
+                double[] sigma_values = new double[dim_size];
+                for (j = 0; j < dim_size; j++){
+                    if(rnd_.nextDouble() > 0.5){
+                        phenotype_values[j] = parents[mating_partner1].phenotype_value[j];
+                        sigma_values[j] = parents[mating_partner1].sigma_value[j];
+                    } else {
+                        phenotype_values[j] = parents[mating_partner2].phenotype_value[j];
+                        sigma_values[j] = parents[mating_partner2].sigma_value[j];
+                    }
+                }
+                new_child.phenotype_value = phenotype_values;
+                new_child.sigma_value = sigma_values;
 
                 // Arethmetic recombination
 //                int mating_partner1 = rnd_.nextInt(number_of_parents);
@@ -273,82 +266,94 @@ public class player3 implements ContestSubmission
                 /////////////////////////////////// MUTATION ///////////////////////////////////
 
                 // Uncorrelated mutation with a single sigma
-                phenotype_values = new double[dim_size];
-                sigma_values = new double[dim_size];
-                overall_sigma = overall_sigma * Math.exp(tau_ap * rnd_.nextGaussian());
-                if(overall_sigma < mutation_threshold){
-                        overall_sigma = mutation_threshold;
-                    }
-                for(j=0;j<dim_size;j++){
-                    phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * overall_sigma;
-                }
-                new_child.phenotype_value = phenotype_values;
-                new_child.sigma_value = sigma_values;
-                try {
-                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
-                } catch (NullPointerException e){
-                        System.out.println("GEN: ".concat(String.valueOf(next_generation.get(0).fitness)));
-                    return;
-                }
-                new_children[i] = new_child;
-
-                // Uncorrelated mutation with n sigma's
 //                phenotype_values = new double[dim_size];
 //                sigma_values = new double[dim_size];
-//                double overall_learning_rate = tau_ap * rnd_.nextGaussian();
-//                for(j=0;j<dim_size;j++){
-//                    sigma_values[j] = new_child.sigma_value[j] * Math.exp(overall_learning_rate + tau * rnd_.nextGaussian());
-//                    phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
-//                    if(sigma_values[j] < mutation_threshold){
-//                        sigma_values[j] = mutation_threshold;
+//                overall_sigma = overall_sigma * Math.exp(tau_ap * rnd_.nextGaussian());
+//                if(overall_sigma < mutation_threshold){
+//                        overall_sigma = mutation_threshold;
 //                    }
+//                for(j=0;j<dim_size;j++){
+//                    phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * overall_sigma;
 //                }
 //                new_child.phenotype_value = phenotype_values;
 //                new_child.sigma_value = sigma_values;
 //                try {
 //                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
 //                } catch (NullPointerException e){
+//                    Child[] temp_ar = new Child[i];
+//                    for(int temp = 0; temp < i; temp++){
+//                        temp_ar[temp] = new_children[temp];
+//                    }
+//                    Arrays.sort(temp_ar, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
+//                    System.out.println("CHILD: ".concat(String.valueOf(temp_ar[0].fitness)));
 //                    System.out.println("GEN: ".concat(String.valueOf(next_generation.get(0).fitness)));
 //                    return;
 //                }
 //                new_children[i] = new_child;
+
+                // Uncorrelated mutation with n sigma's
+                phenotype_values = new double[dim_size];
+                sigma_values = new double[dim_size];
+                double overall_learning_rate = tau_ap * rnd_.nextGaussian();
+                for(j=0;j<dim_size;j++){
+                    sigma_values[j] = new_child.sigma_value[j] * Math.exp(overall_learning_rate + tau * rnd_.nextGaussian());
+                    phenotype_values[j] = new_child.phenotype_value[j] + rnd_.nextGaussian() * sigma_values[j];
+                    if(sigma_values[j] < mutation_threshold){
+                        sigma_values[j] = mutation_threshold;
+                    }
+                }
+                new_child.phenotype_value = phenotype_values;
+                new_child.sigma_value = sigma_values;
+                try {
+                    new_child.fitness = (double) evaluation_.evaluate(phenotype_values);
+                } catch (NullPointerException e){
+                    Child[] temp_ar = new Child[i];
+                    for(int temp = 0; temp < i; temp++){
+                        temp_ar[temp] = new_children[temp];
+                    }
+                    Arrays.sort(temp_ar, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
+                    System.out.println("CHILD: ".concat(String.valueOf(temp_ar[0].fitness)));
+                    System.out.println("GEN: ".concat(String.valueOf(next_generation.get(0).fitness)));
+                    return;
+                }
+                new_children[i] = new_child;
             }
 
             /////////////////////////////////// SURVIVOR SELECTION ///////////////////////////////////
             // Replace worst
-            Arrays.sort(new_children, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
-            for(i = 0; i < number_of_parents; i++){
-                next_generation.add(new_children[i]);
-            }
+//            Arrays.sort(new_children, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
+//            for(i = 0; i < number_of_parents; i++){
+//                next_generation.add(new_children[i]);
+//            }
 
             // Tournament selection
-//            ArrayList<Child> off_spring = new ArrayList<Child>();
-//            off_spring.addAll(Arrays.asList(parents));
-//            off_spring.addAll(Arrays.asList(new_children));
-//            i = 0;
-//            while(i < number_of_parents){
-//                tournament = new Child[tournament_size];
-//                for(j = 0; j < tournament_size; j++){
-//                    random_pick = rnd_.nextInt(off_spring.size()-1);
-//                    tournament[j] = off_spring.get(random_pick);
-//                    off_spring.remove(random_pick);
-//                }
-//                Arrays.sort(tournament, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
-//                tournament_p = tournament_start_p;
-//                for(j = 0; j < tournament_size; j++){
-//                    tournament_p = tournament_p * Math.pow(1-tournament_p, j);
-//                    if(rnd_.nextDouble() < tournament_p){
-//                        next_generation.add(tournament[j]);
-//                        i++;
-//                        break;
-//                    }
-//                }
-//                for(int k = 0; k < tournament_size; k++){
-//                    if(k != j) {
-//                        off_spring.add(tournament[k]);
-//                    }
-//                }
-//            }
+            ArrayList<Child> off_spring = new ArrayList<Child>();
+            off_spring.addAll(Arrays.asList(parents));
+            off_spring.addAll(Arrays.asList(new_children));
+            i = 0;
+            while(i < number_of_parents){
+                tournament = new Child[tournament_size];
+                for(j = 0; j < tournament_size; j++){
+                    random_pick = rnd_.nextInt(off_spring.size()-1);
+                    tournament[j] = off_spring.get(random_pick);
+                    off_spring.remove(random_pick);
+                }
+                Arrays.sort(tournament, (child_1, child_2) -> Double.compare(child_2.fitness, child_1.fitness));
+                tournament_p = tournament_start_p;
+                for(j = 0; j < tournament_size; j++){
+                    tournament_p = tournament_p * Math.pow(1-tournament_p, j);
+                    if(rnd_.nextDouble() < tournament_p){
+                        next_generation.add(tournament[j]);
+                        i++;
+                        break;
+                    }
+                }
+                for(int k = 0; k < tournament_size; k++){
+                    if(k != j) {
+                        off_spring.add(tournament[k]);
+                    }
+                }
+            }
 
             population = next_generation.toArray(new Child[population_size]);
 
